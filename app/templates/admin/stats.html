@@ -1,0 +1,114 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<h1 class="text-center text-danger mt-1">FLIGHT MANAGEMENT STATISTICS</h1>
+<div class="text-end mb-3">
+    <button id="exportBtn" class="btn btn-success me-3">Export to PDF</button>
+</div>
+<div class="row justify-content-center" id="exportContent">
+        <table class="table ml-5">
+            <tr>
+                <th>Id</th>
+                <th>Flight Route</th>
+                <th>Revenue</th>
+            </tr>
+            {% for s in stats %}
+            <tr>
+                <td>{{ s[0] }}</td>
+                <td>{{ s[1] }}</td>
+                <td>{{ "{:,.0f}".format(s[2]) }} VNĐ</td>
+            </tr>
+            {% endfor %}
+        </table>
+    <div class="col-md-5 col-12">
+        <canvas id="myChart"></canvas>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7 col-12">
+        <table class="table">
+            <tr>
+                <th>Month</th>
+                <th>Revenue</th>
+            </tr>
+            {% for s in stats2 %}
+            <tr>
+                <td>{{ s[0] }}</td>
+                <td>{{ "{:,.0f}".format(s[1]) }} VNĐ</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="col-md-5 col-12">
+        <canvas id="myChart2"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+<script>
+    let data = [];
+    let labels = [];
+    let data2 = [];
+    let labels2 = [];
+
+    {% for s in stats %}
+    data.push({{ s[2] | tojson }});
+    labels.push({{ s[0] | tojson }});
+    {% endfor %}
+
+    {% for s in stats2 %}
+    data2.push({{ s[1] | tojson }});
+    labels2.push({{ s[0] | tojson }});
+    {% endfor %}
+
+    function draw(ctx, data, labels) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# Revenue',
+                    data: data,
+                    borderWidth: 1,
+                    backgroundColor: ["red", "green", "blue", "gold", "Aqua"]
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    window.onload = function () {
+        const ctx = document.getElementById('myChart');
+        const ctx2 = document.getElementById('myChart2');
+        draw(ctx, data, labels);
+        draw(ctx2, data2, labels2);
+    }
+
+    // Function to export content to PDF
+    function exportReport() {
+        const element = document.getElementById('exportContent');
+        const opt = {
+            margin:       1,
+            filename:     'Flight_Management_Statistics.pdf',
+            image:        { type: 'jpg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().from(element).set(opt).save();
+    }
+
+    // Attach event listener to the Export button
+    document.getElementById('exportBtn').addEventListener('click', exportReport);
+</script>
+
+{% endblock %}
