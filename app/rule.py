@@ -33,8 +33,6 @@ def check_directory_traversal(input_data):
 #     return False, ""
 
 
-import re
-
 def check_sql_injection(input_data):
     # Định nghĩa mẫu để phát hiện SQL Injection
     sql_injection_patterns = [
@@ -65,41 +63,66 @@ def check_input_size(input_data, max_size=1024):
     return False, ""
 
 
-def apply_rules(data):
+def apply_rules(data, rule_flags=None):
+    if rule_flags is None:
+        rule_flags = {
+            'check_sql_injection': True,
+            'check_xss': True,
+            'check_directory_traversal': True,
+            'check_input_size': True
+        }
+
     print(data)
 
     # Kiểm tra SQL Injection
-    is_injection, message = check_sql_injection(data.get('input', ''))
-    if is_injection:
-        print("SQL Injection detected:", message)
-        return True, message
+    if rule_flags.get('check_sql_injection', True):
+        is_injection, message = check_sql_injection(data.get('input', ''))
+        if is_injection:
+            print("SQL Injection detected:", message)
+            return True, message
 
     # Kiểm tra XSS
-    is_xss, message = check_xss(data.get('input', ''))
-    if is_xss:
-        print("XSS detected:", message)
-        return True, message
+    if rule_flags.get('check_xss', True):
+        is_xss, message = check_xss(data.get('input', ''))
+        if is_xss:
+            print("XSS detected:", message)
+            return True, message
 
     # Kiểm tra Directory Traversal
-    is_traversal, message = check_directory_traversal(data.get('input', ''))
-    if is_traversal:
-        print("Directory Traversal detected:", message)
-        return True, message
+    if rule_flags.get('check_directory_traversal', True):
+        is_traversal, message = check_directory_traversal(data.get('input', ''))
+        if is_traversal:
+            print("Directory Traversal detected:", message)
+            return True, message
 
     # Kiểm tra kích thước dữ liệu
-    is_large, message = check_input_size(data.get('input', ''))
-    if is_large:
-        print("Input size issue detected:", message)
-        return True, message
+    if rule_flags.get('check_input_size', True):
+        is_large, message = check_input_size(data.get('input', ''))
+        if is_large:
+            print("Input size issue detected:", message)
+            return True, message
 
-    # Nếu không có vấn đề gì, cho phép
     print("pass")
     return False, ""
 
 
-# import unittest
-#
-#
+data = {'input': "SELECT * FROM users WHERE id = 1 OR 1=1"}
+rule_flags = {
+    'check_sql_injection': True,
+    'check_xss': True,
+    'check_directory_traversal': True,
+    'check_input_size': True
+}
+
+print(apply_rules(data, rule_flags))
+
+# Nếu bạn muốn tắt kiểm tra XSS
+rule_flags['check_sql_injection'] = False
+print(apply_rules(data, rule_flags))
+
+import unittest
+
+
 # class TestWAFChecks(unittest.TestCase):
 #
 #     def test_check_sql_injection(self):

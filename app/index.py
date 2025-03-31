@@ -13,11 +13,14 @@ def home():
 def handle_request():
     data = request.json
 
+    # Lấy rule_flags từ dữ liệu gửi đến
+    rule_flags = data.get('rule_flags', {})
+
     # Áp dụng các quy tắc WAF
-    is_blocked, reason = apply_rules(data)
+    is_blocked, reason = apply_rules(data, rule_flags)
 
     if is_blocked:
-        return jsonify({"message": "Request blocked", "reason": reason}), 403
+        return jsonify({"message": "Request BỊ CHẶN!!!", "reason": reason}), 403
 
     # Tiếp tục xử lý yêu cầu nếu không bị chặn
-    return jsonify({"message": "Request processed", "data": data}), 200
+    return jsonify({"message": "Request hợp lệ", "data": data}), 200

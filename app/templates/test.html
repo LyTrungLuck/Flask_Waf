@@ -14,6 +14,11 @@
             max-width: 600px;
             margin: 0 auto;
         }
+        .note {
+            font-size: 14px;
+            color: gray;
+            margin: 0; /* Ghi chú sẽ không có margin */
+        }
         textarea {
             width: 100%;
             height: 100px;
@@ -43,41 +48,62 @@
 <body>
     <div class="container">
         <h1>Web Application Firewall</h1>
-        <p>SQL Injection: "OR 1=1"</p>
-        <p>XSS: "&lt;script&gt;alert('XSS')&lt;/script&gt;"</p>
-        <p>Directory Traversal: "../../etc/passwd"</p>
-        <form id="requestForm">
-            <textarea id="inputData" placeholder="Nhập dữ liệu để kiểm tra..."></textarea>
-            <button type="submit">Gửi</button>
-        </form>
-        <div id="response" class="response"></div>
+        <textarea id="inputData" placeholder="Nhập dữ liệu tại đây..."></textarea>
+
+        <h3>Ô dưới cho phép bật/tắt kiểm tra:</h3>
+        <div>
+            <label><input type="checkbox" id="check_sql_injection" checked> Kiểm tra SQL Injection </label>
+            <p class="note">Ví dụ: OR 1=1, ' OR '1'='1', '--</p>
+
+            <label><input type="checkbox" id="check_xss" checked> Kiểm tra XSS </label>
+            <p class="note">Ví dụ:  &lt;script&gt; alert('XSS') &lt;/script&gt;, &lt;img src=x onerror=alert('XSS')&gt;</p>
+
+            <label><input type="checkbox" id="check_directory_traversal" checked> Kiểm tra Directory Traversal</label>
+            <p class="note">Ví dụ: ../../etc/passwd, ..\..\Windows\System32\cmd.exe</p>
+
+            <label><input type="checkbox" id="check_input_size" checked> Kiểm tra kích thước dữ liệu</label>
+            <p class="note">Ví dụ: Dữ liệu quá lớn như "a" * 1025</p>
+        </div>
+        <br>
+
+        <button id="submitBtn">Gửi</button>
+
+        <div class="response" id="response" style="display: none;"></div>
     </div>
 
     <script>
-        document.getElementById('requestForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const inputData = document.getElementById('inputData').value;
+        document.getElementById("submitBtn").onclick = function() {
+            var inputData = document.getElementById("inputData").value;
 
-            try {
-                const response = await fetch('http://localhost:5000/api/request', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ input: inputData }),
-                });
+            // Lấy trạng thái của các checkbox
+            var ruleFlags = {
+                check_sql_injection: document.getElementById("check_sql_injection").checked,
+                check_xss: document.getElementById("check_xss").checked,
+                check_directory_traversal: document.getElementById("check_directory_traversal").checked,
+                check_input_size: document.getElementById("check_input_size").checked
+            };
 
-                const result = await response.json();
-                if(result.reason){
-                    document.getElementById('response').innerText = result.reason;
-                }
-                else{
-                    document.getElementById('response').innerText = "Không có dấu hiệu bất thường ";
-                }
-            } catch (error) {
-                document.getElementById('response').innerText = "Đã xảy ra lỗi: " + error.message;
-            }
-        });
+            fetch('/api/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    input: inputData,
+                    rule_flags: ruleFlags // Gửi các checkbox
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").innerText = data.message + (data.reason ? ": " + data.reason : "");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").innerText = "Đã xảy ra lỗi!";
+            });
+        };
     </script>
 </body>
 </html>
