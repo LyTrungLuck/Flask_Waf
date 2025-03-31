@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Application Firewall</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .response {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #ced4da;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Web Application Firewall</h1>
+        <p>SQL Injection: "OR 1=1"</p>
+        <p>XSS: "&lt;script&gt;alert('XSS')&lt;/script&gt;"</p>
+        <p>Directory Traversal: "../../etc/passwd"</p>
+        <form id="requestForm">
+            <textarea id="inputData" placeholder="Nhập dữ liệu để kiểm tra..."></textarea>
+            <button type="submit">Gửi</button>
+        </form>
+        <div id="response" class="response"></div>
+    </div>
+
+    <script>
+        document.getElementById('requestForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const inputData = document.getElementById('inputData').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ input: inputData }),
+                });
+
+                const result = await response.json();
+                if(result.reason){
+                    document.getElementById('response').innerText = result.reason;
+                }
+                else{
+                    document.getElementById('response').innerText = "Không có dấu hiệu bất thường ";
+                }
+            } catch (error) {
+                document.getElementById('response').innerText = "Đã xảy ra lỗi: " + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
