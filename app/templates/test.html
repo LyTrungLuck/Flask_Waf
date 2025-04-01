@@ -52,6 +52,12 @@
 
         <h3>Ô dưới cho phép bật/tắt kiểm tra:</h3>
         <div>
+            <label><input type="checkbox" id="check_rfi" checked> Kiểm tra RFI </label>
+            <p class="note">Ví dụ: http://example.com/file.php, file=data.json</p>
+
+            <label><input type="checkbox" id="check_command_injection" checked> Kiểm tra Command Injection </label>
+            <p class="note">Ví dụ: ls -la</p>
+
             <label><input type="checkbox" id="check_sql_injection" checked> Kiểm tra SQL Injection </label>
             <p class="note">Ví dụ: OR 1=1, ' OR '1'='1', '--</p>
 
@@ -80,7 +86,9 @@
                 check_sql_injection: document.getElementById("check_sql_injection").checked,
                 check_xss: document.getElementById("check_xss").checked,
                 check_directory_traversal: document.getElementById("check_directory_traversal").checked,
-                check_input_size: document.getElementById("check_input_size").checked
+                check_input_size: document.getElementById("check_input_size").checked,
+                check_rfi: document.getElementById("check_rfi").checked,
+                check_command_injection: document.getElementById("check_command_injection").checked,
             };
 
             fetch('/api/request', {
