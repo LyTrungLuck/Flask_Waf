@@ -1,0 +1,41 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<div class="container">
+    {% if current_user.is_authenticated %}
+        <h2>Thêm Ứng Dụng Web</h2>
+        <form action="/waf" method="POST">
+            <label for="app_name">Tên Ứng Dụng:</label>
+            <input type="text" id="app_name" name="app_name" class="form-control" required>
+
+            <label for="app_url">URL Ứng Dụng:</label>
+            <input type="url" id="app_url" name="app_url" class="form-control" required>
+
+            <input type="submit" class="btn btn-success" value="Thêm Ứng Dụng">
+        </form>
+
+        <h2>Danh Sách Ứng Dụng Đã Đăng Ký</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Tên Ứng Dụng</th>
+                    <th>URL Ứng Dụng</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for web in webs %}
+                <tr>
+                    <td>{{ web.name }}</td>
+                    <td>{{ web.url }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">Cảnh Báo!</h4>
+            <p>Bạn cần đăng nhập để sử dụng dịch vụ này. Vui lòng <a href="{{ url_for('login') }}">đăng nhập</a>.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
