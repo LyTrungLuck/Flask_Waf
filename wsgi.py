@@ -6,6 +6,8 @@ from flask_login import login_user, current_user, logout_user
 from app import app, dao, login
 from app.dao import get_webs_by_user, create_web
 from app.rule import apply_rules
+from app.waf.proxy import forward_request
+from app.waf.waf_checker import is_request_safe
 
 
 @app.route("/")
@@ -13,8 +15,8 @@ def home():
     return render_template("index.html")  # Trả về tệp index.html
 
 
-@app.route("/waf", methods=["GET", "POST"])
-def waf():
+@app.route("/waf_registration", methods=["GET", "POST"])
+def waf_registration():
     user_id = current_user.id  # Giả sử bạn có một user_id, có thể lấy từ session hoặc thông tin người dùng
 
     if request.method == "POST":
@@ -26,12 +28,30 @@ def waf():
         create_web(app_name, app_url, user_id)
         flash("Ứng dụng web đã được thêm thành công!")
 
-        return redirect(url_for('waf'))  # Chuyển hướng về trang waf để làm mới nội dung
+        return redirect(url_for('waf_registration'))  # Chuyển hướng về trang waf để làm mới nội dung
 
     # Lấy danh sách ứng dụng web của người dùng
     webs = get_webs_by_user(user_id)
 
     return render_template("waf.html", webs=webs)
+
+
+@app.route("/waf/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
+def waf(path):
+    headers = dict(request.headers)
+    body = request.get_data(as_text=True)
+    query = request.query_string.decode()
+
+    # Kiểm tra WAF rule
+    is_safe, reason = is_request_safe({"query": query, "body": body})
+    if not is_safe:
+        return jsonify({"error": "Blocked by WAF", "reason": reason}), 403
+
+    # Forward tới hệ thống backend (theo web_url hoặc web_id trong query/session)
+    content, status_code, response_headers = forward_request(
+        path, request.method, headers, body, query
+    )
+    return content, status_code, response_headers
 
 
 @app.route('/login/', methods=['get', 'post'])
@@ -82,46 +102,6 @@ def register():
         except:
             err_msg = 'Hệ thống có lỗi'
     return render_template("register.html", err_msg=err_msg)
-
-
-
-# Hàm trang bị kiểm tra nguồn gốc
-def allow_specific_origin(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        # Lấy tiêu đề Origin (hoặc Referer) từ yêu cầu
-        origin = request.headers.get('Origin') or request.headers.get('Referer')
-        print(f'Origin or Referer: {origin}')  # In ra để kiểm tra
-        print(f'request.headers: {request.headers}')  # In ra để kiểm tra
-        print(f'END')  # In ra để kiểm tra
-
-        # Kiểm tra nếu Origin là product.com
-        if not origin or 'http://127.0.0.1:5002' not in origin:
-            return jsonify({"message": "Request BỊ CHẶN!!!", "reason": "Request bị từ chối, chỉ cho phép từ https://product.com"}), 403
-
-        return f(*args, **kwargs)
-
-    return decorated_function
-
-
-@app.route('/api/request', methods=['POST'])
-@allow_specific_origin
-def handle_request():
-    print('handle_request')
-    data = request.json
-    print(f'data={data}')
-
-    # Lấy rule_flags từ dữ liệu gửi đến
-    rule_flags = data.get('rule_flags', None)
-
-    # Áp dụng các quy tắc WAF
-    is_blocked, reason = apply_rules(data, rule_flags)
-
-    if is_blocked:
-        return jsonify({"message": "Request BỊ CHẶN!!!", "reason": reason}), 403
-
-    # Tiếp tục xử lý yêu cầu nếu không bị chặn
-    return jsonify({"message": "Request hợp lệ", "data": data}), 200
 
 
 if __name__ == "__main__":

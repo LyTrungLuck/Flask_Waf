@@ -4,7 +4,7 @@
 <div class="container">
     {% if current_user.is_authenticated %}
         <h2>Thêm Ứng Dụng Web</h2>
-        <form action="/waf" method="POST">
+        <form action="/waf_registration" method="POST">
             <label for="app_name">Tên Ứng Dụng:</label>
             <input type="text" id="app_name" name="app_name" class="form-control" required>
 
