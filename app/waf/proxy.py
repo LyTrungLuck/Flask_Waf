@@ -23,5 +23,5 @@ def forward_request(path, method, headers, body, query):
 
     headers = {key: value for key, value in headers.items() if key not in ['Cookie', 'Postman-Token', 'Accept-Encoding', 'Connection']}
     print(headers)
-    response = requests.request(method, url, headers={'X-Web-Url': web_urlg}, data=body)
+    response = requests.request(method, url, headers={'X-Web-Url': web_url}, data=body)
     return response.content, response.status_code, response.headers.items()
