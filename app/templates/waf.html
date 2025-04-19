@@ -18,6 +18,7 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Tên Ứng Dụng</th>
                     <th>URL Ứng Dụng</th>
                 </tr>
@@ -25,6 +26,7 @@
             <tbody>
                 {% for web in webs %}
                 <tr>
+                    <td>{{ web.id }}</td>
                     <td>{{ web.name }}</td>
                     <td>{{ web.url }}</td>
                 </tr>

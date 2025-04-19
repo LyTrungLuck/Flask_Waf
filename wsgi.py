@@ -36,8 +36,8 @@ def waf_registration():
     return render_template("waf.html", webs=webs)
 
 
-@app.route("/waf/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
-def waf(path):
+@app.route("/waf/<int:web_id>/<path:path>", methods=["GET", "POST", "PUT", "DELETE"])
+def waf(web_id, path):
     headers = dict(request.headers)
     body = request.get_data(as_text=True)
     query = request.query_string.decode()
@@ -47,9 +47,9 @@ def waf(path):
     if not is_safe:
         return jsonify({"error": "Blocked by WAF", "reason": reason}), 403
 
-    # Forward tới hệ thống backend (theo web_url hoặc web_id trong query/session)
+    # Gửi đến backend
     content, status_code, response_headers = forward_request(
-        path, request.method, headers, body, query
+        web_id, path, request.method, headers, body, query
     )
     return content, status_code, response_headers
 
